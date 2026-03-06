@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkUSD (LUSD) 토큰 추가 - TronLink</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            max-width: 480px;
+            margin: 40px auto;
+            padding: 24px;
+            background: #1a1a2e;
+            color: #eee;
+            border-radius: 16px;
+        }
+        h1 { font-size: 1.25rem; margin-bottom: 8px; }
+        p { color: #aaa; font-size: 0.9rem; margin-bottom: 24px; }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #0f0f1a;
+            color: #eee;
+            font-size: 0.9rem;
+        }
+        button {
+            width: 100%;
+            padding: 16px;
+            background: #00d4aa;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button:hover { background: #00e6bb; }
+        button:disabled { background: #444; color: #888; cursor: not-allowed; }
+        .msg { margin-top: 16px; padding: 12px; border-radius: 8px; font-size: 0.9rem; }
+        .ok { background: #0d3d2d; color: #00d4aa; }
+        .err { background: #3d1d0d; color: #ff6b6b; }
+    </style>
+</head>
+<body>
+    <h1>LinkUSD (LUSD) 토큰 추가</h1>
+    <p>버튼 클릭 → TronLink에서 확인 → 추가</p>
+
+    <label>컨트랙트 주소</label>
+    <input type="text" id="addr" placeholder="배포 후 컨트랙트 주소 입력 (T로 시작)">
+
+    <button id="btn">TronLink에 토큰 추가</button>
+    <div id="msg"></div>
+
+    <script>
+        const addrInput = document.getElementById('addr');
+        const btn = document.getElementById('btn');
+        const msg = document.getElementById('msg');
+
+        function show(txt, isErr) {
+            msg.className = 'msg ' + (isErr ? 'err' : 'ok');
+            msg.textContent = txt;
+        }
+
+        btn.onclick = async function() {
+            const contractAddr = addrInput.value.trim();
+            if (!contractAddr || !contractAddr.startsWith('T')) {
+                show('컨트랙트 주소를 입력하세요 (T로 시작)', true);
+                return;
+            }
+
+            if (!window.tronWeb || !window.tronWeb.defaultAddress?.base58) {
+                show('TronLink를 설치하고 지갑을 연결하세요.', true);
+                return;
+            }
+
+            btn.disabled = true;
+            show('처리 중...');
+
+            try {
+                await window.tronWeb.request({
+                    method: 'wallet_watchAsset',
+                    params: {
+                        type: 'trc20',
+                        options: { address: contractAddr }
+                    }
+                });
+                show('토큰이 추가되었습니다. TronLink에서 확인하세요.');
+            } catch (e) {
+                if (e.code === 4001) show('사용자가 취소했습니다.');
+                else show('오류: ' + (e.message || e));
+            }
+            btn.disabled = false;
+        };
+    </script>
+</body>
+</html>
