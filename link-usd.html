@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Link USD (LUSD) — TRON TRC20 스테이블코인</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0d0d1a 0%, #1a1a2e 50%, #0f0f1a 100%);
+            color: #eee;
+            min-height: 100vh;
+        }
+        .container { max-width: 640px; margin: 0 auto; padding: 24px; }
+        .header {
+            text-align: center;
+            padding: 48px 24px 32px;
+            border-bottom: 1px solid #222;
+        }
+        .logo { font-size: 2rem; font-weight: 700; color: #00d4aa; letter-spacing: -0.5px; }
+        .symbol { font-size: 1rem; color: #888; margin-top: 4px; }
+        .tagline { color: #aaa; font-size: 0.95rem; margin-top: 12px; }
+        .card {
+            background: rgba(15,15,26,0.8);
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+        .card h2 { font-size: 1rem; color: #00d4aa; margin: 0 0 16px; }
+        .card p { color: #aaa; font-size: 0.9rem; margin: 0 0 12px; line-height: 1.5; }
+        a.btn {
+            display: inline-block;
+            padding: 12px 20px;
+            background: #00d4aa;
+            color: #0d0d1a;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            transition: background 0.2s;
+        }
+        a.btn:hover { background: #00e6bb; }
+        a.btn-outline {
+            background: transparent;
+            border: 2px solid #00d4aa;
+            color: #00d4aa;
+        }
+        a.btn-outline:hover { background: rgba(0,212,170,0.1); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 16px; }
+        .grid a {
+            display: block;
+            padding: 16px;
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #00d4aa;
+            text-decoration: none;
+            font-size: 0.9rem;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+        .grid a:hover { border-color: #00d4aa; }
+        .back { margin-bottom: 24px; }
+        .back a { color: #888; text-decoration: none; font-size: 0.9rem; }
+        .back a:hover { color: #00d4aa; }
+        .contact { font-size: 0.85rem; color: #666; margin-top: 32px; padding-top: 24px; border-top: 1px solid #222; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <p class="back"><a href="index.html"><i class="fas fa-arrow-left"></i> 링크가이드</a></p>
+
+        <header class="header">
+            <div class="logo">Link USD</div>
+            <div class="symbol">LUSD · TRON TRC20</div>
+            <p class="tagline">온체인 Burn · Lock · 투명성</p>
+        </header>
+
+        <div class="card">
+            <h2>도구</h2>
+            <p>잔액 확인, 전송, 토큰 추가, 거래 내역</p>
+            <div class="grid">
+                <a href="token-receive.html">잔액·전송</a>
+                <a href="add-token.html">토큰 추가</a>
+                <a href="tx-history.html">거래 내역</a>
+                <a href="tether-tools.html">도구 모음</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>문서</h2>
+            <p>백서, 배포 가이드, 보안 검토</p>
+            <a href="TetherUSD_Whitepaper.md" class="btn">백서</a>
+            <a href="메인넷_배포_가이드.md" class="btn btn-outline">배포 가이드</a>
+            <a href="LinkUSD_자체_보안_검토.md" class="btn btn-outline">보안 검토</a>
+        </div>
+
+        <div class="card">
+            <h2>외부 링크</h2>
+            <a href="https://sunswap.com" class="btn" target="_blank" rel="noopener">SunSwap</a>
+            <a href="https://tronscan.org" class="btn btn-outline" target="_blank" rel="noopener">TronScan</a>
+        </div>
+
+        <div class="contact">
+            이메일: hosuk112233@gmail.com | 전화: 82)010-6786-2109
+        </div>
+    </div>
+</body>
+</html>
