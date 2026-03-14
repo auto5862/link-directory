@@ -17,7 +17,7 @@
 
 **URL 예시 (본인 것으로 교체):**
 - 웹사이트: `https://[유저명].github.io/link-directory/green-point.html`
-- 백서: `https://[유저명].github.io/link-directory/GreenPoint_Whitepaper.md` (또는 준비한 URL)
+- 백서: `https://[유저명].github.io/link-directory/GreenPoint_Whitepaper.md`
 - 자체 감사: `https://[유저명].github.io/link-directory/GreenPoint_자체_보안_검토.md`
 - 텔레그램: `https://t.me/[채널명]`
 - 트위터: `https://x.com/[계정명]`

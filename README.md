@@ -39,6 +39,7 @@ TRON 블록체인 기반 TRC20 토큰. Sun Pump 론치 + TronScan 배포. 온체
 | [GreenPoint_전체_배포_가이드.md](GreenPoint_전체_배포_가이드.md) | **Green Point 전체 배포 가이드** |
 | [GreenPoint_자체_보안_검토.md](GreenPoint_자체_보안_검토.md) | 자체 감사보고서 |
 | [GreenPoint_태그_제출_기입란.md](GreenPoint_태그_제출_기입란.md) | 태그 제출 기입란 |
+| [GreenPoint_Whitepaper.md](GreenPoint_Whitepaper.md) | Green Point 백서 |
 | [SunPump_완전_가이드.md](SunPump_완전_가이드.md) | Sun Pump 사용법 |
 | [메인넷_배포_가이드.md](메인넷_배포_가이드.md) | 배포 절차 (참고) |
 | [토큰_평판_업데이트_기입란_전부.md](토큰_평판_업데이트_기입란_전부.md) | 토큰 등급 업데이트 기입란 |
