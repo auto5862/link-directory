@@ -1,6 +1,6 @@
 # Green Point — API 등록 가이드
 
-**배포 후 반드시 진행. 토큰 평판·신뢰도에 도움.**
+**언제:** 배포 전·후 상관없음. **지금 해도 됨.** (토큰 배포 후 모니터링에 사용)
 
 ---
 
@@ -22,8 +22,9 @@
 | 2 | https://tronscan.org/#/myaccount/apiKeys 이동 |
 | 3 | **애플리케이션 이름** 입력: `greenpoint-monitor` |
 | 4 | **API 키 생성** 클릭 |
-| 5 | 생성된 키 복사 → `.env` 또는 로컬 비밀 파일에 저장 |
-| 6 | **절대 GitHub·문서·공개 글에 키 넣지 않음** |
+| 5 | 생성된 키 복사 → **`.env`** 파일의 `TRONSCAN_API_KEY=` 뒤에 붙여넣기 |
+| 6 | `.env`는 `.gitignore`에 있음 → **GitHub에 안 올라감** (키 비공개 유지) |
+| 7 | **절대 GitHub·문서·공개 글에 키 넣지 않음** |
 
 ---
 
@@ -38,11 +39,24 @@ API credentials are managed privately.
 
 ---
 
-## 4. 체크리스트
+## 4. .env 저장 (로컬에 이미 있음)
+
+`c:\Users\hosuk\link-directory\.env` 파일에 아래 형식으로 저장:
+
+```
+TRONSCAN_API_KEY=여기에_TronScan에서_생성한_키_붙여넣기
+```
+
+- `.env`는 GitHub에 올라가지 않음 (.gitignore)
+- `.env.example`은 템플릿만 (키 없음) → GitHub에 있음
+
+---
+
+## 5. 체크리스트
 
 | # | 확인 |
 |---|------|
 | ☐ | TronScan API Keys에서 키 생성 |
-| ☐ | 키를 `.env` 등 비공개 저장 |
+| ☐ | `.env`에 `TRONSCAN_API_KEY=키` 저장 |
 | ☐ | GitHub·문서에 키 노출 없음 |
 | ☐ | 토큰 평판 제출 시 위 문구 포함 |
