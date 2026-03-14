@@ -1,4 +1,5 @@
 # Green Point만 업로드. 나머지 제외
+*.pdf
 
 # LUSD / Link USD
 LinkUSD_TRON.sol
