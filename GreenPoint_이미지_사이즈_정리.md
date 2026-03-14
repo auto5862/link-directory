@@ -16,7 +16,18 @@
 
 ---
 
-## 2. Sun Pump 이미지 (선택)
+## 2. 텔레그램 채널 이미지
+
+| 항목 | 값 |
+|------|-----|
+| **프로필 사진** | 512×512 픽셀, PNG/JPEG, 5MB 이하. 원형 크롭됨 → 중앙 배치 |
+| **채널 배너** (선택) | 1280×640 픽셀, PNG/JPEG, 5MB 이하 |
+| **파일** | `GreenPoint_logo_512x512.png`, `GreenPoint_banner_1280x640.png` |
+| **상세** | `GreenPoint_텔레그램_채널_만들기.md` 참고 |
+
+---
+
+## 3. Sun Pump 이미지 (선택)
 
 | 항목 | 값 |
 |------|-----|
@@ -26,15 +37,17 @@
 
 ---
 
-## 3. 준비된 파일
+## 4. 준비된 파일
 
 | 파일 | 상태 |
 |------|------|
 | GreenPoint_logo_100x100.png | ✓ (100×100, TronScan용) |
+| GreenPoint_logo_512x512.png | ✓ (512×512, 텔레그램 프로필) |
+| GreenPoint_banner_1280x640.png | ✓ (1280×640, 텔레그램 배너) |
 
 ---
 
-## 4. 배포 시 업로드 순서
+## 5. 배포 시 업로드 순서
 
 1. **Record Token** → 로고 없음 (나중에 Update에서)
 2. **Update Token Basic Info** → Token Logo에 `GreenPoint_logo_100x100.png` 업로드

@@ -23,7 +23,15 @@
 |--------|--------|
 | Address | 발행자 지갑 주소 |
 | Tag | `Green Point` |
-| Short Description | **[맨 위에]** 서명 해시 + 원본 메시지 붙여넣기. 그 아래: `Green Point (GRP) — TRON TRC20. Burn·Lock. Website, Telegram, Whitepaper, Audit provided.` |
-| Project Official Website | `https://[유저명].github.io/link-directory/green-point.html` |
+| Short Description | 아래 "Short Description 복사용" 블록 전체 복사 → 붙여넣기 |
+| Project Official Website | `https://auto5862.github.io/link-directory/green-point.html` |
 | Project Name | `Green Point` |
 | Contact Info | `hosuk112233@gmail.com` |
+
+### Short Description 복사용 (전체 선택 → 복사)
+
+```
+0x05f7c453dcb5df978fbc4fa0ccf8c8941c7f43cdadaf875f1d0d7037cdc4ac676953f3812d0d44ad8ad5c5154d1afe7abfbc66be8bdd025a7ef2deabe68534641b
+I confirm this address belongs to Green Point.
+Green Point (GRP) - TRON TRC20. Burn-Lock. Website, Telegram, Whitepaper, Audit provided.
+```
