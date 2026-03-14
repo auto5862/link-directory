@@ -141,14 +141,16 @@
 
 ---
 
-# 7. API 등록 (TronScan)
+# 7. API 등록 (TronScan) — 필수
+
+**상세:** `GreenPoint_API_등록_가이드.md` 참고
 
 **URL:** https://tronscan.org/#/myaccount/apiKeys
 
 | 단계 | 내용 |
 |------|------|
 | 1 | 로그인 후 API Keys 페이지 접속 |
-| 2 | 애플리케이션 이름 입력 (예: `greenpoint-monitor`) |
+| 2 | 애플리케이션 이름 입력: `greenpoint-monitor` |
 | 3 | API 키 생성 |
 | 4 | 키를 `.env` 등 비공개 저장 (절대 GitHub에 올리지 않음) |
 
