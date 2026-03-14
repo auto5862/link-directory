@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Green Point (GRP) 받은 토큰 확인</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 24px;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+        }
+        h1 { font-size: 1.35rem; margin-bottom: 4px; }
+        h2 { font-size: 1rem; margin: 24px 0 12px; color: #00d4aa; }
+        p { color: #aaa; font-size: 0.9rem; margin-bottom: 16px; line-height: 1.5; }
+        .card {
+            background: #0f0f1a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid #222;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #1a1a2e;
+            color: #eee;
+            font-size: 0.9rem;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #00d4aa;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+        button:hover { background: #00e6bb; }
+        button:disabled { background: #444; color: #888; cursor: not-allowed; }
+        button.outline {
+            background: transparent;
+            border: 2px solid #00d4aa;
+            color: #00d4aa;
+        }
+        button.outline:hover { background: rgba(0,212,170,0.1); }
+        a.btn {
+            display: block;
+            text-align: center;
+            padding: 14px;
+            background: #2a2a4a;
+            color: #00d4aa;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        a.btn:hover { background: #333355; }
+        .msg { margin-top: 12px; padding: 12px; border-radius: 8px; font-size: 0.9rem; }
+        .ok { background: #0d3d2d; color: #00d4aa; }
+        .err { background: #3d1d0d; color: #ff6b6b; }
+        .balance { font-size: 1.5rem; font-weight: 700; color: #00d4aa; margin: 12px 0; }
+        .note { font-size: 0.85rem; color: #666; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <h1>Green Point (GRP) 받은 토큰 확인</h1>
+    <p>토큰을 받았나요? 아래 방법 중 하나로 확인하세요.</p>
+
+    <div class="card">
+        <p class="note">컨트랙트 주소 (배포 후 입력)</p>
+        <input type="text" id="contractAddr" placeholder="배포 후 컨트랙트 주소 입력 (T로 시작)" value="TNXDJXHKBXZFWLksXpvccy9oKZNw9kHPVS">
+    </div>
+
+    <!-- 1. 지갑 연결 → 잔액 확인 -->
+    <div class="card">
+        <h2>① 지갑 연결해서 잔액 보기</h2>
+        <p>TronLink 연결하면 이 페이지에서 바로 잔액 확인 (토큰 추가 안 해도 됨)</p>
+        <button id="connectBtn">지갑 연결 & 잔액 확인</button>
+        <div id="balanceMsg"></div>
+    </div>
+
+    <!-- 2. TronScan -->
+    <div class="card">
+        <h2>② TronScan에서 확인</h2>
+        <p>주소 검색하면 모든 TRC20 내역 자동 표시. 토큰 추가 불필요.</p>
+        <input type="text" id="scanAddr" placeholder="지갑 주소 (T로 시작)">
+        <a href="#" id="tronScanNile" class="btn" target="_blank">Nile TronScan에서 보기 →</a>
+        <a href="#" id="tronScanMain" class="btn" target="_blank">Mainnet TronScan에서 보기 →</a>
+        <p class="note">테스트넷=Nile / 메인넷=Mainnet</p>
+    </div>
+
+    <!-- 2-1. 보내기 (토큰 추가 없이) -->
+    <div class="card">
+        <h2>②-1 보내기 (토큰 추가 없이)</h2>
+        <p>지갑 연결 → 받을 주소·금액 입력 → 이 페이지에서 바로 전송 (Custom Token 추가 불필요)</p>
+        <input type="text" id="sendTo" placeholder="받을 주소 (T로 시작)">
+        <input type="text" id="sendAmount" placeholder="금액 (예: 1 = 1 USDT)">
+        <button id="sendBtn" class="outline">보내기</button>
+        <div id="sendMsg"></div>
+    </div>
+
+    <!-- 3. TronLink에 토큰 추가 -->
+    <div class="card">
+        <h2>③ TronLink 지갑에 토큰 추가</h2>
+        <p>버튼 한 번으로 지갑에 표시 (이후 지갑에서 바로 보임)</p>
+        <button id="addBtn" class="outline">TronLink에 토큰 추가</button>
+        <div id="addMsg"></div>
+    </div>
+
+    <!-- 4. CoinMarketCap -->
+    <div class="card">
+        <h2>④ CoinMarketCap 등록 (장기)</h2>
+        <p>등록되면 TronLink에서 자동 표시될 수 있음. SunSwap 상장 + 거래량 필요.</p>
+        <a href="https://coinmarketcap.com/request" class="btn" target="_blank">CMC 등록 신청 →</a>
+    </div>
+
+    <script>
+        function getContractAddr() { return document.getElementById('contractAddr').value.trim(); }
+        const balanceMsg = document.getElementById('balanceMsg');
+        const addMsg = document.getElementById('addMsg');
+        const scanAddr = document.getElementById('scanAddr');
+        const tronScanNile = document.getElementById('tronScanNile');
+        const tronScanMain = document.getElementById('tronScanMain');
+
+        function showBalance(txt, isErr) {
+            balanceMsg.className = 'msg ' + (isErr ? 'err' : 'ok');
+            balanceMsg.innerHTML = txt;
+        }
+        function showAdd(txt, isErr) {
+            addMsg.className = 'msg ' + (isErr ? 'err' : 'ok');
+            addMsg.textContent = txt;
+        }
+        function showSend(txt, isErr) {
+            const el = document.getElementById('sendMsg');
+            el.className = 'msg ' + (isErr ? 'err' : 'ok');
+            el.textContent = txt;
+        }
+
+        // 1. 지갑 연결 & 잔액
+        document.getElementById('connectBtn').onclick = async function() {
+            if (!getContractAddr().startsWith('T')) {
+                showBalance('컨트랙트 주소를 확인하세요.', true);
+                return;
+            }
+            if (!window.tronWeb || !window.tronWeb.defaultAddress?.base58) {
+                showBalance('TronLink 설치 후 이 페이지 새로고침하세요.', true);
+                return;
+            }
+            const addr = window.tronWeb.defaultAddress.base58;
+            showBalance('조회 중...');
+            try {
+                const contract = await window.tronWeb.contract().at(getContractAddr());
+                const bal = await contract.balanceOf(addr).call();
+                const decimals = 6;
+                const display = (Number(bal) / Math.pow(10, decimals)).toLocaleString();
+                showBalance('<span class="balance">' + display + ' LUSD</span>');
+            } catch (e) {
+                showBalance('오류: ' + (e.message || e), true);
+            }
+        };
+
+        // 2. TronScan 링크
+        function updateTronScanLinks() {
+            const addr = scanAddr.value.trim();
+            const path = addr ? '/#/address/' + addr : '';
+            tronScanNile.href = 'https://nile.tronscan.org' + path;
+            tronScanMain.href = 'https://tronscan.org' + path;
+        }
+        scanAddr.oninput = updateTronScanLinks;
+        updateTronScanLinks();
+
+        // 2-1. 보내기
+        document.getElementById('sendBtn').onclick = async function() {
+            const to = document.getElementById('sendTo').value.trim();
+            const amt = parseFloat(document.getElementById('sendAmount').value);
+            if (!getContractAddr().startsWith('T')) { showSend('컨트랙트 주소 확인', true); return; }
+            if (!to.startsWith('T')) { showSend('받을 주소 입력', true); return; }
+            if (!amt || amt <= 0) { showSend('금액 입력', true); return; }
+            if (!window.tronWeb?.defaultAddress?.base58) { showSend('TronLink 연결', true); return; }
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            showSend('전송 중...');
+            try {
+                const contract = await window.tronWeb.contract().at(getContractAddr());
+                const amountRaw = Math.floor(amt * 1e6);
+                await contract.transfer(to, amountRaw).send();
+                showSend('전송 완료');
+            } catch (e) {
+                showSend('오류: ' + (e.message || e), true);
+            }
+            sendBtn.disabled = false;
+        };
+
+        // 3. 토큰 추가
+        document.getElementById('addBtn').onclick = async function() {
+            if (!getContractAddr().startsWith('T')) {
+                showAdd('컨트랙트 주소를 확인하세요.', true);
+                return;
+            }
+            if (!window.tronWeb || !window.tronWeb.defaultAddress?.base58) {
+                showAdd('TronLink 연결 후 시도하세요.', true);
+                return;
+            }
+            document.getElementById('addBtn').disabled = true;
+            showAdd('처리 중...');
+            try {
+                await window.tronWeb.request({
+                    method: 'wallet_watchAsset',
+                    params: { type: 'trc20', options: { address: getContractAddr() } }
+                });
+                showAdd('추가됐습니다. TronLink에서 확인하세요.');
+            } catch (e) {
+                if (e.code === 4001) showAdd('취소됐습니다.');
+                else showAdd('오류: ' + (e.message || e), true);
+            }
+            document.getElementById('addBtn').disabled = false;
+        };
+    </script>
+</body>
+</html>

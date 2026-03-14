@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRX + TRC10 + TRC20 거래 내역 조회</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #1a1a2e; color: #eee; }
+        h1 { font-size: 1.2rem; }
+        .card { background: #0f0f1a; border-radius: 12px; padding: 20px; margin: 16px 0; border: 1px solid #222; }
+        input, select { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #333; border-radius: 8px; background: #1a1a2e; color: #eee; }
+        button { padding: 12px 24px; background: #00d4aa; color: #1a1a2e; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        button:hover { background: #00e6bb; }
+        button:disabled { background: #444; color: #888; cursor: not-allowed; }
+        .tx-list { margin-top: 16px; }
+        .tx-item { padding: 12px; background: #1a1a2e; border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; }
+        .tx-type { color: #00d4aa; font-weight: 600; }
+        .tx-amount { color: #fff; }
+        .tx-date { color: #888; font-size: 0.8rem; }
+        .err { color: #ff6b6b; }
+        .pagination { margin: 16px 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .pagination button { padding: 8px 16px; }
+    </style>
+</head>
+<body>
+    <h1>TRX + TRC10 + TRC20 거래 내역</h1>
+    <p>일반 API는 TRC20을 안 뱉음. TRC20은 별도 API 호출 후 합침.</p>
+
+    <div class="card">
+        <label>주소</label>
+        <input type="text" id="addr" placeholder="T로 시작하는 34자">
+
+        <label>TronGrid API 키 (선택, 있으면 제한 완화)</label>
+        <input type="text" id="apiKey" placeholder="비워두면 키 없이 요청">
+
+        <label>네트워크</label>
+        <select id="network">
+            <option value="https://api.trongrid.io">Mainnet</option>
+            <option value="https://api.nile.trongrid.io">Nile (테스트넷)</option>
+        </select>
+
+        <label>최대 개수 (API당)</label>
+        <input type="number" id="limit" value="200" min="1" max="200">
+
+        <label>필터</label>
+        <select id="filter">
+            <option value="all">전체 (TRX+TRC10+TRC20)</option>
+            <option value="trc20">TRC20만</option>
+            <option value="trx">TRX/TRC10만</option>
+        </select>
+
+        <label>방향 (TRC20)</label>
+        <select id="direction">
+            <option value="all">전체</option>
+            <option value="from" selected>보낸 것만</option>
+            <option value="to">받은 것만</option>
+        </select>
+
+        <label>TRC20 토큰 (특정 주소만, 비우면 전체)</label>
+        <input type="text" id="tokenAddr" placeholder="컨트랙트 주소 (선택)">
+
+        <label>날짜 범위 (선택)</label>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+            <input type="date" id="dateFrom" placeholder="시작일" style="flex:1">
+            <input type="date" id="dateTo" placeholder="종료일" style="flex:1">
+        </div>
+
+        <label>페이지당 표시</label>
+        <select id="perPage">
+            <option value="50">50건</option>
+            <option value="100">100건</option>
+            <option value="250" selected>250건</option>
+            <option value="500">500건</option>
+        </select>
+
+        <button id="btn">조회</button>
+        <div id="result" class="tx-list"></div>
+        <div id="pagination" class="pagination"></div>
+    </div>
+
+    <script>
+        document.getElementById('btn').onclick = async function() {
+            const addr = document.getElementById('addr').value.trim();
+            const base = document.getElementById('network').value;
+            const limit = parseInt(document.getElementById('limit').value) || 20;
+            const result = document.getElementById('result');
+            const btn = document.getElementById('btn');
+
+            if (!addr || !addr.startsWith('T')) {
+                result.innerHTML = '<span class="err">주소를 입력하세요 (T로 시작)</span>';
+                return;
+            }
+
+            btn.disabled = true;
+            result.innerHTML = '조회 중...';
+
+            try {
+                const apiKey = document.getElementById('apiKey').value.trim();
+                const headers = apiKey ? { 'TRON-PRO-API-KEY': apiKey } : {};
+
+                // 1. TRX, TRC10 (일반 트랜잭션)
+                const res1 = await fetch(base + '/v1/accounts/' + addr + '/transactions?limit=' + limit + '&only_confirmed=true', { headers });
+                const data1 = await res1.json();
+
+                // 2. TRC20 (별도 API)
+                const res2 = await fetch(base + '/v1/accounts/' + addr + '/transactions/trc20?limit=' + limit, { headers });
+                const data2 = await res2.json();
+
+                const list = [];
+
+                // TRX/TRC10
+                if (data1.data) {
+                    data1.data.forEach(tx => {
+                        const t = tx.block_timestamp || 0;
+                        const type = tx.raw_data?.contract?.[0]?.type || 'TRX';
+                        list.push({ ts: t, type: 'TRX/TRC10', txid: tx.txID, raw: tx });
+                    });
+                }
+
+                // TRC20
+                if (data2.data) {
+                    data2.data.forEach(tx => {
+                        const t = tx.block_timestamp || 0;
+                        const sym = tx.token_info?.symbol || 'TRC20';
+                        const val = tx.value ? (Number(tx.value) / 1e6).toFixed(2) : '-';
+                        const dir = (tx.to || '').toLowerCase() === addr.toLowerCase() ? 'to' : 'from';
+                        list.push({ ts: t, type: 'TRC20', symbol: sym, value: val, dir: dir, tokenAddr: tx.token_info?.address, txid: tx.transaction_id, raw: tx });
+                    });
+                }
+
+                // 필터 적용
+                const filterVal = document.getElementById('filter').value;
+                const dirVal = document.getElementById('direction').value;
+                const tokenAddrVal = document.getElementById('tokenAddr').value.trim().toLowerCase();
+                let filtered = list;
+                if (filterVal === 'trc20') filtered = list.filter(t => t.type === 'TRC20');
+                else if (filterVal === 'trx') filtered = list.filter(t => t.type === 'TRX/TRC10');
+                if (dirVal !== 'all') filtered = filtered.filter(t => t.type !== 'TRC20' || t.dir === dirVal);
+                if (tokenAddrVal) filtered = filtered.filter(t => (t.tokenAddr || '').toLowerCase() === tokenAddrVal);
+
+                // 날짜 필터
+                const dateFrom = document.getElementById('dateFrom').value;
+                const dateTo = document.getElementById('dateTo').value;
+                if (dateFrom) {
+                    const minTs = new Date(dateFrom).getTime();
+                    filtered = filtered.filter(t => (t.ts || 0) >= minTs);
+                }
+                if (dateTo) {
+                    const maxTs = new Date(dateTo).getTime() + 86400000;
+                    filtered = filtered.filter(t => (t.ts || 0) < maxTs);
+                }
+
+                // 시간순 정렬
+                filtered.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+
+                // 페이지네이션
+                const perPage = parseInt(document.getElementById('perPage').value) || 250;
+                let currentPage = 1;
+                const totalPages = Math.ceil(filtered.length / perPage) || 1;
+
+                function renderPage(page) {
+                    currentPage = Math.max(1, Math.min(page, totalPages));
+                    const start = (currentPage - 1) * perPage;
+                    const slice = filtered.slice(start, start + perPage);
+
+                    let html = '<p>총 ' + filtered.length + '건 (전체 ' + list.length + '건 중)';
+                    html += ' <button id="exportBtn" style="margin-left:8px;padding:4px 12px;font-size:0.85rem">CSV 내보내기</button></p>';
+                    slice.forEach(t => {
+                        const tscan = base.includes('nile') ? 'https://nile.tronscan.org' : 'https://tronscan.org';
+                        const link = tscan + '/#/transaction/' + (t.txid || t.raw?.txID || '');
+                        const dateStr = t.ts ? new Date(t.ts).toLocaleString('ko-KR') : '-';
+                        html += '<div class="tx-item">';
+                        html += '<span class="tx-date">' + dateStr + '</span> ';
+                        html += '<span class="tx-type">' + t.type + (t.symbol ? ' ' + t.symbol : '') + (t.dir ? (t.dir === 'to' ? ' 받음' : ' 보냄') : '') + '</span>';
+                        if (t.value) html += ' <span class="tx-amount">' + t.value + '</span>';
+                        html += ' <a href="' + link + '" target="_blank" style="color:#00d4aa;margin-left:8px">보기</a>';
+                        html += '</div>';
+                    });
+                    result.innerHTML = html;
+
+                    // 페이지 버튼
+                    let pg = '<span>페이지 ' + currentPage + ' / ' + totalPages + '</span>';
+                    if (currentPage > 1) pg += '<button id="prevBtn">이전</button>';
+                    if (currentPage < totalPages) pg += '<button id="nextBtn">다음</button>';
+                    document.getElementById('pagination').innerHTML = pg;
+
+                    document.getElementById('prevBtn')?.addEventListener('click', () => renderPage(currentPage - 1));
+                    document.getElementById('nextBtn')?.addEventListener('click', () => renderPage(currentPage + 1));
+
+                    document.getElementById('exportBtn')?.addEventListener('click', () => {
+                        let csv = '날짜,유형,심볼,금액,방향,TxID\n';
+                        filtered.forEach(t => {
+                            const d = t.ts ? new Date(t.ts).toISOString() : '';
+                            csv += '"' + d + '","' + t.type + '","' + (t.symbol || '') + '","' + (t.value || '') + '","' + (t.dir || '') + '","' + (t.txid || '') + '"\n';
+                        });
+                        const a = document.createElement('a');
+                        a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('\uFEFF' + csv);
+                        a.download = 'tx-history-' + addr.slice(0,8) + '.csv';
+                        a.click();
+                    });
+                }
+                renderPage(1);
+            } catch (e) {
+                result.innerHTML = '<span class="err">오류: ' + (e.message || e) + '</span>';
+                document.getElementById('pagination').innerHTML = '';
+            }
+            btn.disabled = false;
+        };
+    </script>
+</body>
+</html>
