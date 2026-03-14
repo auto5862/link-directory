@@ -14,6 +14,7 @@
 | 4 | 트위터/X 계정 준비 | ☐ |
 | 5 | 백서 URL 확정 | ☐ |
 | 6 | 자체 감사보고서: `GreenPoint_자체_보안_검토.md` | ✓ (준비됨) |
+| 7 | **토큰 로고**: `GreenPoint_logo_100x100.png` (100×100 PNG) | ✓ (준비됨) |
 
 **URL 예시 (본인 것으로 교체):**
 - 웹사이트: `https://[유저명].github.io/link-directory/green-point.html`
@@ -90,7 +91,7 @@
 |--------|--------|
 | Token Introduction | `Green Point (GRP) — TRON TRC20. Burn, Lock. Website, Telegram, Whitepaper, Audit.` |
 | Decimals | `6` |
-| Token Logo | 100×100 PNG, 200KB 이하 |
+| Token Logo | `GreenPoint_logo_100x100.png` (100×100 PNG, 200KB 이하) |
 | Project Official Website | GitHub Pages URL |
 | Link for GitHub | `https://github.com/[유저명]/link-directory` |
 | Official Email | 이메일 |
