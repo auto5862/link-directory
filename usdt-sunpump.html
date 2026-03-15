@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>USDT (TeatherUSD) — Sun Pump · TRON TRC20</title>
+    <title>USDT (TeatherUSD) — 탈중앙화 달러 페그 · TRON TRC20</title>
+    <meta name="description" content="USDT (TeatherUSD) — TRON TRC-20 탈중앙화 달러 페그 스테이블코인. 반테더 대안. Sun Pump · SunSwap.">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
@@ -15,24 +16,25 @@
             color: #eee;
             min-height: 100vh;
         }
-        .container { max-width: 640px; margin: 0 auto; padding: 24px; }
+        .container { max-width: 720px; margin: 0 auto; padding: 24px; }
         .header {
             text-align: center;
-            padding: 48px 24px 32px;
+            padding: 48px 24px 40px;
             border-bottom: 1px solid #222;
         }
-        .logo { font-size: 2rem; font-weight: 700; color: #26a69a; letter-spacing: -0.5px; }
-        .symbol { font-size: 1rem; color: #888; margin-top: 4px; }
-        .tagline { color: #aaa; font-size: 0.95rem; margin-top: 12px; }
+        .logo { font-size: 2.2rem; font-weight: 700; color: #26a69a; letter-spacing: -0.5px; }
+        .symbol { font-size: 1rem; color: #888; margin-top: 8px; }
+        .tagline { color: #aaa; font-size: 1rem; margin-top: 16px; line-height: 1.5; }
         .card {
-            background: rgba(15,15,26,0.8);
+            background: rgba(15,15,26,0.9);
             border: 1px solid #222;
             border-radius: 12px;
             padding: 24px;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
-        .card h2 { font-size: 1rem; color: #26a69a; margin: 0 0 16px; }
-        .card p { color: #aaa; font-size: 0.9rem; margin: 0 0 12px; line-height: 1.5; }
+        .card h2 { font-size: 1.1rem; color: #26a69a; margin: 0 0 16px; }
+        .card p { color: #bbb; font-size: 0.95rem; margin: 0 0 12px; line-height: 1.6; }
+        .card ul { color: #bbb; font-size: 0.95rem; margin: 0 0 12px; padding-left: 20px; line-height: 1.6; }
         a.btn {
             display: inline-block;
             padding: 12px 20px;
@@ -47,10 +49,13 @@
             transition: background 0.2s;
         }
         a.btn:hover { background: #2dd1c1; }
+        .btn-outline { background: transparent; border: 1px solid #26a69a; color: #26a69a; }
+        .btn-outline:hover { background: rgba(38,166,154,0.2); }
         .back { margin-bottom: 24px; }
         .back a { color: #888; text-decoration: none; font-size: 0.9rem; }
         .back a:hover { color: #26a69a; }
         .contact { font-size: 0.85rem; color: #666; margin-top: 32px; padding-top: 24px; border-top: 1px solid #222; }
+        .highlight { color: #26a69a; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -60,29 +65,45 @@
         <header class="header">
             <div class="logo">USDT (TeatherUSD)</div>
             <div class="symbol">USDT · TRC-20 · Sun Pump</div>
-            <p class="tagline">Sun Pump 신뢰 쌓고 TRON으로</p>
+            <p class="tagline">탈중앙화 달러 페그 · 반테더 대안 · TRON 생태계</p>
         </header>
 
         <div class="card">
-            <h2>장점</h2>
-            <p>TRC-20 · 지갑 표시 · Sun Pump → TRON 확장</p>
+            <h2><i class="fas fa-bolt"></i> 탈중앙화 & 반테더</h2>
+            <p>테더(Tether)는 회사가 발행·예비자산을 통제하는 <span class="highlight">중앙화</span> 구조다. USDT (TeatherUSD)는 <span class="highlight">온체인</span> 발행·검증, DEX 거래로 <span class="highlight">탈중앙화</span>를 지향한다.</p>
+            <p>달러 페그는 사용 목적일 뿐, 중앙화를 의미하지 않는다. 우리는 탈중앙화 구조로 달러와 궤를 같이 하는 대안을 제공한다.</p>
         </div>
 
         <div class="card">
-            <h2>문서</h2>
+            <h2><i class="fas fa-cube"></i> 기술</h2>
+            <ul>
+                <li><strong>TRC-20</strong> 표준 · TRON Mainnet</li>
+                <li><strong>decimals 6</strong> · 1 USDT = 10^6 최소 단위</li>
+                <li><strong>온체인</strong> 전송·잔액 · TronScan 검증 가능</li>
+                <li><strong>SunSwap</strong> DEX · AMM 유동성 풀</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-check-circle"></i> 장점</h2>
+            <p>TRC-20 · 지갑 USDT 표시 · Sun Pump → SunSwap → TRON 확장</p>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-file-alt"></i> 문서</h2>
             <a href="USDT_TeatherUSD_백서.md" class="btn">백서</a>
-            <a href="USDT_TeatherUSD_감사_보고서.md" class="btn">감사 보고서</a>
+            <a href="USDT_TeatherUSD_감사_보고서.md" class="btn btn-outline">감사 보고서</a>
         </div>
 
         <div class="card">
-            <h2>외부 링크</h2>
+            <h2><i class="fas fa-external-link-alt"></i> 링크</h2>
             <a href="https://sunpump.meme" class="btn" target="_blank" rel="noopener">Sun Pump</a>
             <a href="https://sunswap.com" class="btn" target="_blank" rel="noopener">SunSwap</a>
-            <a href="#" class="btn" target="_blank" rel="noopener"><i class="fab fa-telegram"></i> 텔레그램</a>
+            <a href="https://t.me/USDT_TeatherUSD_Official" class="btn" target="_blank" rel="noopener"><i class="fab fa-telegram"></i> 텔레그램</a>
         </div>
 
         <div class="contact">
-            이메일: hosuk112233@gmail.com | 텔레그램: (채널 만들고 링크 추가)
+            이메일: hosuk112233@gmail.com | 텔레그램: USDT TeatherUSD Official
         </div>
     </div>
 </body>
