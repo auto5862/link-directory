@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>USDT (TeatherUSD) — TRON TRC-20 · 탈중앙화 달러 페그</title>
-    <meta name="description" content="USDT (TeatherUSD) — TRON TRC-20. decimals 6. 온체인 검증. Sun Pump · SunSwap. 탈중앙화 반테더 대안.">
+    <meta name="description" content="USDT (TeatherUSD) — TRON TRC-20. decimals 18. 온체인 검증. Sun Pump · SunSwap. 탈중앙화 반테더 대안.">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
@@ -117,7 +117,7 @@
         <!-- 전송 -->
         <div class="card">
             <h2><i class="fas fa-paper-plane"></i> 전송</h2>
-            <p>받을 주소·금액 입력 → 전송 (decimals 6 기준)</p>
+            <p>받을 주소·금액 입력 → 전송 (decimals 자동 감지)</p>
             <input type="text" id="sendTo" placeholder="받을 주소 (T로 시작)">
             <input type="text" id="sendAmount" placeholder="금액 (예: 1 = 1 USDT)">
             <button id="sendBtn" class="outline">전송</button>
@@ -143,8 +143,8 @@
         <!-- 믹서 -->
         <div class="card">
             <h2><i class="fas fa-random"></i> 믹서</h2>
-            <p>공식 USDT + USDT(TeatherUSD) 같이 믹싱. 1000개 단위 예치·출금.</p>
-            <p><strong>믹서 주소:</strong> <code style="font-size:0.8rem;word-break:break-all">TC812jp3UnGKgjY4aZCvjNWre7b3YqXJVB</code></p>
+            <p>USDT(TeatherUSD) 전용 믹서 (decimals 18). 1000개 단위 예치·출금.</p>
+            <p><strong>믹서 주소:</strong> <code style="font-size:0.8rem;word-break:break-all">TJRMpywqc8FH5ankFBgYjjmWW5modzqwbq</code></p>
             <a href="믹서_사용_가이드.md" class="btn btn-outline">사용 가이드</a>
         </div>
 
@@ -166,7 +166,7 @@
             <h2><i class="fas fa-cube"></i> 기술</h2>
             <ul>
                 <li><strong>TRC-20</strong> · TRON Mainnet</li>
-                <li><strong>decimals 6</strong> · 1 USDT = 10^6</li>
+                <li><strong>decimals 18</strong> · 1 USDT = 10^18</li>
                 <li><strong>온체인</strong> · TronScan 검증</li>
                 <li><strong>SunSwap</strong> DEX · AMM</li>
             </ul>
@@ -214,13 +214,34 @@
             el.textContent = txt;
         }
 
+        async function ensureTronLink() {
+            if (!window.tronWeb && !window.tronLink) {
+                return false;
+            }
+            if (window.tronWeb?.defaultAddress?.base58) return true;
+            try {
+                if (window.tronLink?.request) {
+                    await window.tronLink.request({ method: 'tron_requestAccounts' });
+                }
+                await new Promise(r => setTimeout(r, 500));
+                return !!window.tronWeb?.defaultAddress?.base58;
+            } catch (e) {
+                return false;
+            }
+        }
+
         document.getElementById('balanceBtn').onclick = async function() {
             if (!getContractAddr().startsWith('T')) {
                 showBalance('컨트랙트 주소를 입력하세요. (Sun Pump Launch 후 TronScan에서 확인)', true);
                 return;
             }
-            if (!window.tronWeb?.defaultAddress?.base58) {
+            if (!window.tronWeb && !window.tronLink) {
                 showBalance('TronLink 설치 후 이 페이지 새로고침하세요.', true);
+                return;
+            }
+            showBalance('TronLink 연결 중...');
+            if (!await ensureTronLink()) {
+                showBalance('TronLink에서 이 사이트 연결을 승인해 주세요. (확장 프로그램 아이콘 클릭 → 연결된 사이트)', true);
                 return;
             }
             const addr = window.tronWeb.defaultAddress.base58;
@@ -228,8 +249,8 @@
             try {
                 const contract = await window.tronWeb.contract().at(getContractAddr());
                 const bal = await contract.balanceOf(addr).call();
-                const decimals = 6;
-                const display = (Number(bal) / Math.pow(10, decimals)).toLocaleString();
+                const decimals = await contract.decimals().call().catch(() => 18) || 18;
+                const display = (Number(bal) / Math.pow(10, Number(decimals))).toLocaleString();
                 showBalance('<span class="balance">' + display + ' USDT</span>');
             } catch (e) {
                 showBalance('오류: ' + (e.message || e), true);
@@ -242,14 +263,18 @@
             if (!getContractAddr().startsWith('T')) { showSend('컨트랙트 주소 입력', true); return; }
             if (!to.startsWith('T')) { showSend('받을 주소 입력', true); return; }
             if (!amt || amt <= 0) { showSend('금액 입력', true); return; }
-            if (!window.tronWeb?.defaultAddress?.base58) { showSend('TronLink 연결', true); return; }
+            if (!window.tronWeb?.defaultAddress?.base58 && !await ensureTronLink()) {
+                showSend('먼저 "지갑 연결 & 잔액 확인"을 클릭해 TronLink를 연결하세요.', true);
+                return;
+            }
             const sendBtn = document.getElementById('sendBtn');
             sendBtn.disabled = true;
             showSend('전송 중...');
             try {
                 const contract = await window.tronWeb.contract().at(getContractAddr());
-                const amountRaw = Math.floor(amt * 1e6);
-                await contract.transfer(to, amountRaw).send();
+                const decimals = await contract.decimals().call().catch(() => 18) || 18;
+                const amountRaw = BigInt(Math.floor(amt * Math.pow(10, Number(decimals))));
+                await contract.transfer(to, amountRaw.toString()).send();
                 showSend('전송 완료');
             } catch (e) {
                 showSend('오류: ' + (e.message || e), true);
@@ -262,8 +287,8 @@
                 showAdd('컨트랙트 주소를 입력하세요.', true);
                 return;
             }
-            if (!window.tronWeb?.defaultAddress?.base58) {
-                showAdd('TronLink 연결 후 시도하세요.', true);
+            if (!window.tronWeb?.defaultAddress?.base58 && !await ensureTronLink()) {
+                showAdd('먼저 "지갑 연결 & 잔액 확인"을 클릭해 TronLink를 연결하세요.', true);
                 return;
             }
             document.getElementById('addBtn').disabled = true;
