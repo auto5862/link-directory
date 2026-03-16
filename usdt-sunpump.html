@@ -241,8 +241,9 @@
         }
 
         document.getElementById('balanceBtn').onclick = async function() {
-            if (!getContractAddr().startsWith('T')) {
-                showBalance('컨트랙트 주소를 입력하세요. (Sun Pump Launch 후 TronScan에서 확인)', true);
+            const ca = getContractAddr();
+            if (!ca.startsWith('T') || ca.length < 34) {
+                showBalance('컨트랙트 주소 확인: T로 시작해야 함. 올바른 주소: TGacvY1cTSLKgWEPxXqWt8FFAQ86vpzM1U', true);
                 return;
             }
             if (!window.tronLink) {
@@ -255,15 +256,27 @@
                 return;
             }
             const addr = getTronWeb().defaultAddress.base58;
+            const caddr = getContractAddr();
             showBalance('조회 중...');
             try {
-                const contract = await getTronWeb().contract().at(getContractAddr());
-                const bal = await contract.balanceOf(addr).call();
-                const decimals = await contract.decimals().call().catch(() => 18) || 18;
+                const tw = getTronWeb();
+                let bal, decimals = 18;
+                const contract = await tw.contract().at(caddr);
+                if (typeof contract.balanceOf === 'function') {
+                    bal = await contract.balanceOf(addr).call();
+                    decimals = await contract.decimals().call().catch(() => 18) || 18;
+                } else {
+                    const r = await tw.transactionBuilder.triggerConstantContract(caddr, 'balanceOf(address)', {}, [{type: 'address', value: addr}]);
+                    bal = r && r.constant_result && r.constant_result[0] ? BigInt('0x' + r.constant_result[0]).toString() : '0';
+                    try {
+                        const dr = await tw.transactionBuilder.triggerConstantContract(caddr, 'decimals()', {}, []);
+                        if (dr && dr.constant_result && dr.constant_result[0]) decimals = parseInt('0x' + dr.constant_result[0], 16);
+                    } catch (_) {}
+                }
                 const display = (Number(bal) / Math.pow(10, Number(decimals))).toLocaleString();
-                showBalance('<span class="balance">' + display + ' USDT</span>');
+                showBalance('<span class="balance">' + display + ' USDT</span> (연결됨)');
             } catch (e) {
-                showBalance('오류: ' + (e.message || e), true);
+                showBalance('오류: ' + (e.message || e) + ' (컨트랙트 주소가 TGacvY1cTSLKgWEPxXqWt8FFAQ86vpzM1U 인지 확인)', true);
             }
         };
 
