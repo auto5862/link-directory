@@ -214,18 +214,28 @@
             el.textContent = txt;
         }
 
+        function getTronWeb() {
+            return window.tronWeb || (window.tronLink && window.tronLink.tronWeb);
+        }
+
         async function ensureTronLink() {
-            if (!window.tronWeb && !window.tronLink) {
-                return false;
-            }
-            if (window.tronWeb?.defaultAddress?.base58) return true;
+            if (!window.tronLink) return false;
+            const tw = getTronWeb();
+            if (tw?.defaultAddress?.base58) return true;
             try {
-                if (window.tronLink?.request) {
-                    await window.tronLink.request({ method: 'tron_requestAccounts' });
+                if (window.tronLink.ready && window.tronLink.tronWeb?.defaultAddress?.base58) {
+                    window.tronWeb = window.tronLink.tronWeb;
+                    return true;
+                }
+                const res = await window.tronLink.request({ method: 'tron_requestAccounts' });
+                if (res && res.code === 200 && window.tronLink.tronWeb) {
+                    window.tronWeb = window.tronLink.tronWeb;
+                    return !!window.tronWeb?.defaultAddress?.base58;
                 }
                 await new Promise(r => setTimeout(r, 500));
-                return !!window.tronWeb?.defaultAddress?.base58;
+                return !!getTronWeb()?.defaultAddress?.base58;
             } catch (e) {
+                console.error('TronLink connect:', e);
                 return false;
             }
         }
@@ -235,19 +245,19 @@
                 showBalance('컨트랙트 주소를 입력하세요. (Sun Pump Launch 후 TronScan에서 확인)', true);
                 return;
             }
-            if (!window.tronWeb && !window.tronLink) {
-                showBalance('TronLink 설치 후 이 페이지 새로고침하세요.', true);
+            if (!window.tronLink) {
+                showBalance('TronLink가 설치되지 않았습니다. Chrome 웹스토어에서 설치 후 새로고침하세요.', true);
                 return;
             }
-            showBalance('TronLink 연결 중...');
+            showBalance('TronLink 연결 중... (팝업이 뜨면 연결 클릭)');
             if (!await ensureTronLink()) {
-                showBalance('TronLink에서 이 사이트 연결을 승인해 주세요. (확장 프로그램 아이콘 클릭 → 연결된 사이트)', true);
+                showBalance('연결 실패. TronLink 확장 아이콘 클릭 → 설정 → 연결된 사이트에서 이 페이지 수동 추가 후 새로고침.', true);
                 return;
             }
-            const addr = window.tronWeb.defaultAddress.base58;
+            const addr = getTronWeb().defaultAddress.base58;
             showBalance('조회 중...');
             try {
-                const contract = await window.tronWeb.contract().at(getContractAddr());
+                const contract = await getTronWeb().contract().at(getContractAddr());
                 const bal = await contract.balanceOf(addr).call();
                 const decimals = await contract.decimals().call().catch(() => 18) || 18;
                 const display = (Number(bal) / Math.pow(10, Number(decimals))).toLocaleString();
@@ -263,7 +273,7 @@
             if (!getContractAddr().startsWith('T')) { showSend('컨트랙트 주소 입력', true); return; }
             if (!to.startsWith('T')) { showSend('받을 주소 입력', true); return; }
             if (!amt || amt <= 0) { showSend('금액 입력', true); return; }
-            if (!window.tronWeb?.defaultAddress?.base58 && !await ensureTronLink()) {
+            if (!getTronWeb()?.defaultAddress?.base58 && !await ensureTronLink()) {
                 showSend('먼저 "지갑 연결 & 잔액 확인"을 클릭해 TronLink를 연결하세요.', true);
                 return;
             }
@@ -271,7 +281,7 @@
             sendBtn.disabled = true;
             showSend('전송 중...');
             try {
-                const contract = await window.tronWeb.contract().at(getContractAddr());
+                const contract = await getTronWeb().contract().at(getContractAddr());
                 const decimals = await contract.decimals().call().catch(() => 18) || 18;
                 const amountRaw = BigInt(Math.floor(amt * Math.pow(10, Number(decimals))));
                 await contract.transfer(to, amountRaw.toString()).send();
@@ -287,14 +297,14 @@
                 showAdd('컨트랙트 주소를 입력하세요.', true);
                 return;
             }
-            if (!window.tronWeb?.defaultAddress?.base58 && !await ensureTronLink()) {
+            if (!getTronWeb()?.defaultAddress?.base58 && !await ensureTronLink()) {
                 showAdd('먼저 "지갑 연결 & 잔액 확인"을 클릭해 TronLink를 연결하세요.', true);
                 return;
             }
             document.getElementById('addBtn').disabled = true;
             showAdd('처리 중...');
             try {
-                await window.tronWeb.request({
+                await getTronWeb().request({
                     method: 'wallet_watchAsset',
                     params: { type: 'trc20', options: { address: getContractAddr() } }
                 });
