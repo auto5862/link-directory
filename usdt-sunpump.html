@@ -355,12 +355,16 @@
             return 6;
         }
 
+        const TRC20_ABI = [
+            { inputs: [{ name: '_to', type: 'address' }, { name: '_value', type: 'uint256' }], name: 'transfer', outputs: [{ type: 'bool' }], stateMutability: 'Nonpayable', type: 'function' }
+        ];
+
         document.getElementById('sendBtn').onclick = async function() {
             const to = document.getElementById('sendTo').value.trim();
             const amt = parseFloat(document.getElementById('sendAmount').value);
             const feeLimit = parseInt(document.getElementById('feeLimit')?.value || '100000000', 10) || 100000000;
             if (!getContractAddr().startsWith('T')) { showSend('컨트랙트 주소 입력', true); return; }
-            if (!to.startsWith('T')) { showSend('받을 주소 입력', true); return; }
+            if (!to.startsWith('T')) { showSend('받을 주소 입력 (상대 공식 USDT 주소)', true); return; }
             if (!amt || amt <= 0) { showSend('금액 입력', true); return; }
             const tw = getTronWeb() || window.tronWeb || window.tronLink?.tronWeb;
             if (!tw?.defaultAddress?.base58 && !await ensureTronLink()) {
@@ -372,38 +376,64 @@
             const sendBtn = document.getElementById('sendBtn');
             sendBtn.disabled = true;
             showSend('전송 중... (TronLink 팝업에서 승인 클릭)');
-            const opts = { feeLimit: Math.max(10000000, feeLimit), callValue: 0, visible: true };
-            let decimals = 6, amountRaw, lastErr;
+            let decimals = 6, amountRaw;
             try {
                 decimals = await getDecimals(tronWeb, caddr);
                 amountRaw = BigInt(Math.floor(amt * Math.pow(10, Number(decimals)))).toString();
             } catch (e) {
                 amountRaw = BigInt(Math.floor(amt * 1e6)).toString();
             }
-            try {
-                const tx = await tronWeb.transactionBuilder.triggerSmartContract(
-                    caddr, 'transfer(address,uint256)', opts,
-                    [{ type: 'address', value: to }, { type: 'uint256', value: amountRaw }]
-                );
-                if (!tx?.transaction) throw new Error('트랜잭션 생성 실패');
-                const signedTx = await tronWeb.trx.sign(tx.transaction);
-                const result = await tronWeb.trx.sendRawTransaction(signedTx);
-                if (result?.result && (result.txid || result.transaction?.txID)) {
-                    showSend('전송 완료. 상대 공식 USDT 주소로 들어갔습니다.');
-                } else if (result?.result === false) {
-                    showSend('전송 실패: ' + (result.message || '온체인 거부'), true);
-                } else {
-                    showSend('전송 완료');
+            const opts = { feeLimit: Math.max(10000000, feeLimit), callValue: 0 };
+            let lastErr = null;
+
+            const methods = [
+                async () => {
+                    const contract = await tronWeb.contract(TRC20_ABI, caddr);
+                    return await contract.transfer(to, amountRaw).send(opts);
+                },
+                async () => {
+                    const tx = await tronWeb.transactionBuilder.triggerSmartContract(
+                        caddr, 'transfer(address,uint256)', { ...opts, visible: true },
+                        [{ type: 'address', value: to }, { type: 'uint256', value: amountRaw }]
+                    );
+                    if (!tx?.transaction) throw new Error('트랜잭션 생성 실패');
+                    const signedTx = await tronWeb.trx.sign(tx.transaction);
+                    return await tronWeb.trx.sendRawTransaction(signedTx);
+                },
+                async () => {
+                    const toHex = tronWeb.address?.toHex?.(to) || to;
+                    const tx = await tronWeb.transactionBuilder.triggerSmartContract(
+                        caddr, 'transfer(address,uint256)', { ...opts, visible: true },
+                        [{ type: 'address', value: toHex }, { type: 'uint256', value: amountRaw }]
+                    );
+                    if (!tx?.transaction) throw new Error('트랜잭션 생성 실패');
+                    const signedTx = await tronWeb.trx.sign(tx.transaction);
+                    return await tronWeb.trx.sendRawTransaction(signedTx);
                 }
-            } catch (e) {
-                const msg = (e?.message || e?.toString() || '알 수 없음');
-                if (msg.includes('denied') || msg.includes('User denied') || msg.includes('rejected')) {
-                    showSend('사용자가 거부했습니다.', true);
-                } else if (msg.includes('Insufficient balance') || msg.includes('insufficient')) {
-                    showSend('잔액 부족. 보유 USDT를 확인하세요.', true);
-                } else {
-                    showSend('오류: ' + msg, true);
+            ];
+
+            for (let i = 0; i < methods.length; i++) {
+                try {
+                    const result = await methods[i]();
+                    const ok = result && result?.result !== false && (result?.txid || result?.transaction?.txID || (typeof result === 'string' && result.length > 20));
+                    if (ok) {
+                        showSend('전송 완료. 상대 공식 USDT 주소로 들어갔습니다.');
+                        sendBtn.disabled = false;
+                        return;
+                    }
+                    if (result?.result === false) lastErr = result.message || '온체인 거부';
+                } catch (e) {
+                    lastErr = e?.message || e?.toString() || String(e);
                 }
+            }
+
+            const msg = lastErr || '알 수 없음';
+            if (msg.includes('denied') || msg.includes('User denied') || msg.includes('rejected')) {
+                showSend('사용자가 거부했습니다.', true);
+            } else if (msg.includes('Insufficient balance') || msg.includes('insufficient')) {
+                showSend('잔액 부족. 보유 USDT + TRX(수수료) 확인하세요.', true);
+            } else {
+                showSend('오류: ' + msg + ' — 아래 TronScan Contract Write 링크에서 transfer 직접 호출해보세요.', true);
             }
             sendBtn.disabled = false;
         };
