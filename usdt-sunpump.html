@@ -389,9 +389,7 @@
                 const signedTx = await tronWeb.trx.sign(tx.transaction);
                 const result = await tronWeb.trx.sendRawTransaction(signedTx);
                 if (result?.result && (result.txid || result.transaction?.txID)) {
-                    const txId = result.txid || result.transaction.txID;
-                    const receiveUrl = window.location.href.replace(/\/[^/]*$/, '/receive-usdt.html');
-                    showSend('전송 완료. 받는 사람에게 이 링크 전달: <a href="receive-usdt.html" target="_blank" style="color:#26a69a">receive-usdt.html</a> (버튼 한 번 클릭으로 지갑에 표시)');
+                    showSend('전송 완료. 상대 공식 USDT 주소로 들어갔습니다.');
                 } else if (result?.result === false) {
                     showSend('전송 실패: ' + (result.message || '온체인 거부'), true);
                 } else {
