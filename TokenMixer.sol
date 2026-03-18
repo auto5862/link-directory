@@ -7,8 +7,9 @@ pragma solidity ^0.8.0;
  * @dev 토큰 주소를 받아 해당 TRC20 토큰 믹싱
  */
 contract TokenMixer {
-    // 고정 금액 (decimals 18 기준 1000개 — USDT TeatherUSD)
-    uint256 public constant FIXED_AMOUNT = 1000 * 10**18;
+    // 고정 금액: decimals 6 기준 1000개 (표준 USDT)
+    // ※ 온체인 토큰이 decimals 18이면 1000 * 10**18로 변경 후 재배포
+    uint256 public constant FIXED_AMOUNT = 1000 * 10**6;
 
     // 토큰 인터페이스
     address public token;

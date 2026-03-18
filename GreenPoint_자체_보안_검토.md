@@ -6,6 +6,17 @@
 
 ---
 
+## 주소 (참조)
+
+| 구분 | 주소 |
+|------|------|
+| **발행자 (TronLink 지갑)** | `TVMfvZxNrTWE9jFoN4RBdyercKhLpRYrFm` |
+| **TronScan GRP (본 토큰)** | `TPG7971YWN5kpMBwdzLbtMpEwJNMkh9Ux6` |
+| **Sun Pump GRP** (별도 토큰) | `TD8sRqLZ1m2uZfS7tKuVgXUkSSTSCFTb5n` |
+| **DEX** | SunSwap (TRX/GRP 풀 등록됨) |
+
+---
+
 ## 1. 접근 제어
 
 | 항목 | 상태 | 비고 |

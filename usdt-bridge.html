@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>우리 테더 → 공식 테더 (상대 지갑에 바로 입금)</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 0; background: linear-gradient(135deg, #0d0d1a 0%, #1a1a2e 50%, #0f0f1a 100%); color: #eee; min-height: 100vh; }
+        .container { max-width: 640px; margin: 0 auto; padding: 24px; }
+        .card { background: rgba(15,15,26,0.9); border: 1px solid #222; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+        .card h2 { font-size: 1.1rem; color: #26a69a; margin: 0 0 16px; }
+        input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #333; border-radius: 8px; background: #1a1a2e; color: #eee; font-size: 0.9rem; }
+        button { width: 100%; padding: 14px; background: #26a69a; color: #0d0d1a; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-bottom: 8px; }
+        button:hover { background: #2dd1c1; }
+        button:disabled { background: #444; color: #888; cursor: not-allowed; }
+        .msg { margin-top: 12px; padding: 12px; border-radius: 8px; font-size: 0.9rem; }
+        .msg.ok { background: #0d3d2d; color: #26a69a; }
+        .msg.err { background: #3d1d0d; color: #ff6b6b; }
+        .note { font-size: 0.85rem; color: #666; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <p><a href="usdt-sunpump.html" style="color:#888;text-decoration:none"><i class="fas fa-arrow-left"></i> USDT 페이지로</a></p>
+
+        <div class="card" style="border-color:#26a69a;background:rgba(38,166,154,0.1);">
+            <h2><i class="fas fa-exchange-alt"></i> 우리 테더 → 상대 지갑에 공식 테더로 입금</h2>
+            <p><strong>상대가 토큰 추가하지 않아도</strong> 공식 USDT로 바로 들어갑니다.</p>
+            <p class="note">※ 브릿지 컨트랙트 배포 + 공식 USDT 예치 필요. 아래에서 전환 실행.</p>
+        </div>
+
+        <div class="card">
+            <h2>1. 브릿지 주소 (배포 후 입력)</h2>
+            <input type="text" id="bridgeAddr" placeholder="브릿지 컨트랙트 주소 (T로 시작)" value="">
+            <p class="note">USDTBridge.sol 배포 후 주소 입력. <a href="USDTBridge_배포_가이드.md" style="color:#26a69a">배포 가이드</a></p>
+        </div>
+
+        <div class="card">
+            <h2>2. 전환 실행</h2>
+            <p>받을 주소에 <strong>공식 USDT</strong>가 들어갑니다 (토큰 추가 불필요).</p>
+            <input type="text" id="recipient" placeholder="받을 주소 (T로 시작)">
+            <input type="text" id="amount" placeholder="금액 (예: 1 = 1 USDT)">
+            <button id="approveBtn">1단계: 우리 USDT 승인</button>
+            <button id="swapBtn" style="background:#ff9800">2단계: 공식 USDT로 전환 & 전송</button>
+            <div id="bridgeMsg"></div>
+        </div>
+
+        <div class="card">
+            <h2>3. 브릿지 잔액</h2>
+            <p>공식 USDT가 있어야 전환 가능. <button id="checkBalance">잔액 확인</button></p>
+            <div id="balanceResult"></div>
+        </div>
+    </div>
+
+    <script>
+        const OUR_USDT = 'TGacvY1cTSLKgWEPxXqWt8FFAQ86vpzM1U';
+        const OFFICIAL_USDT = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t';
+
+        function getBridgeAddr() { return document.getElementById('bridgeAddr').value.trim(); }
+        function showBridge(txt, isErr) {
+            const el = document.getElementById('bridgeMsg');
+            el.className = 'msg ' + (isErr ? 'err' : 'ok');
+            el.textContent = txt;
+        }
+
+        window.addEventListener('tronLink#initialized', () => { if (window.tronLink?.tronWeb) window.tronWeb = window.tronLink.tronWeb; });
+        if (window.tronLink?.tronWeb) window.tronWeb = window.tronLink.tronWeb;
+
+        async function ensureConnect() {
+            if (!window.tronLink) { showBridge('TronLink 설치 필요', true); return null; }
+            try {
+                await window.tronLink.request({ method: 'tron_requestAccounts' });
+                if (window.tronLink.tronWeb?.defaultAddress?.base58) return window.tronLink.tronWeb;
+            } catch (e) {}
+            showBridge('지갑 연결 실패', true);
+            return null;
+        }
+
+        document.getElementById('approveBtn').onclick = async function() {
+            const tw = await ensureConnect();
+            if (!tw) return;
+            const bridge = getBridgeAddr();
+            if (!bridge.startsWith('T')) { showBridge('브릿지 주소 입력', true); return; }
+            const amt = parseFloat(document.getElementById('amount').value);
+            if (!amt || amt <= 0) { showBridge('금액 입력', true); return; }
+            const amountRaw = BigInt(Math.floor(amt * 1e6)).toString();
+            showBridge('승인 중...');
+            try {
+                const tx = await tw.transactionBuilder.triggerSmartContract(OUR_USDT, 'approve(address,uint256)', { feeLimit: 100000000 }, [{ type: 'address', value: bridge }, { type: 'uint256', value: amountRaw }]);
+                const signed = await tw.trx.sign(tx.transaction);
+                const res = await tw.trx.sendRawTransaction(signed);
+                if (res?.result) showBridge('승인 완료. 2단계 실행하세요.');
+                else showBridge('승인 실패: ' + (res?.message || ''), true);
+            } catch (e) {
+                showBridge('오류: ' + (e.message || e), true);
+            }
+        };
+
+        document.getElementById('swapBtn').onclick = async function() {
+            const tw = await ensureConnect();
+            if (!tw) return;
+            const bridge = getBridgeAddr();
+            const to = document.getElementById('recipient').value.trim();
+            if (!bridge.startsWith('T') || !to.startsWith('T')) { showBridge('브릿지 주소와 받을 주소 입력', true); return; }
+            const amt = parseFloat(document.getElementById('amount').value);
+            if (!amt || amt <= 0) { showBridge('금액 입력', true); return; }
+            const amountRaw = BigInt(Math.floor(amt * 1e6)).toString();
+            showBridge('전환 중...');
+            try {
+                const tx = await tw.transactionBuilder.triggerSmartContract(bridge, 'swapToOfficial(uint256,address)', { feeLimit: 100000000 }, [{ type: 'uint256', value: amountRaw }, { type: 'address', value: to }]);
+                const signed = await tw.trx.sign(tx.transaction);
+                const res = await tw.trx.sendRawTransaction(signed);
+                if (res?.result) showBridge('완료. 상대 지갑에 공식 USDT 입금됨.');
+                else showBridge('실패: ' + (res?.message || ''), true);
+            } catch (e) {
+                showBridge('오류: ' + (e.message || e), true);
+            }
+        };
+
+        document.getElementById('checkBalance').onclick = async function() {
+            const bridge = getBridgeAddr();
+            if (!bridge.startsWith('T')) { document.getElementById('balanceResult').innerHTML = '<span class="msg err">브릿지 주소 입력</span>'; return; }
+            try {
+                const tw = window.tronLink?.tronWeb || window.tronWeb;
+                const r = await tw.transactionBuilder.triggerConstantContract(OFFICIAL_USDT, 'balanceOf(address)', {}, [{ type: 'address', value: bridge }]);
+                const bal = r?.constant_result?.[0] ? BigInt('0x' + r.constant_result[0]).toString() : '0';
+                const display = (Number(bal) / 1e6).toLocaleString();
+                document.getElementById('balanceResult').innerHTML = '<span class="msg ok">공식 USDT: ' + display + ' (예치됨)</span>';
+            } catch (e) {
+                document.getElementById('balanceResult').innerHTML = '<span class="msg err">조회 실패</span>';
+            }
+        };
+    </script>
+</body>
+</html>
