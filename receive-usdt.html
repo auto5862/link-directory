@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USDT 받음 — 지갑에 표시</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 0; background: linear-gradient(135deg, #0d0d1a 0%, #1a1a2e 100%); color: #eee; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .box { max-width: 400px; padding: 40px; text-align: center; }
+        h1 { font-size: 1.5rem; color: #26a69a; margin-bottom: 16px; }
+        p { color: #aaa; margin-bottom: 24px; line-height: 1.6; }
+        button { padding: 16px 32px; background: #26a69a; color: #0d0d1a; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+        button:hover { background: #2dd1c1; }
+        .done { color: #26a69a; margin-top: 16px; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1><i class="fas fa-wallet"></i> USDT (TeatherUSD) 받음</h1>
+        <p>지갑에 표시하려면 아래 버튼을 <strong>한 번만</strong> 클릭하세요.</p>
+        <button id="addBtn">지갑에 추가 (원클릭)</button>
+        <div id="result"></div>
+    </div>
+    <script>
+        const TOKEN = 'TGacvY1cTSLKgWEPxXqWt8FFAQ86vpzM1U';
+        async function doAdd() {
+            const btn = this;
+            btn.disabled = true;
+            if (!window.tronLink) {
+                document.getElementById('result').innerHTML = '<p class="done">TronLink 설치 후 새로고침하세요.</p>';
+                btn.disabled = false;
+                return;
+            }
+            try {
+                await window.tronLink.request({ method: 'tron_requestAccounts' });
+                await window.tronLink.request({
+                    method: 'wallet_watchAsset',
+                    params: { type: 'trc20', options: { address: TOKEN } }
+                });
+                document.getElementById('result').innerHTML = '<p class="done">추가됐습니다. 지갑에서 확인하세요.</p>';
+            } catch (e) {
+                document.getElementById('result').innerHTML = '<p class="done" style="color:#ff6b6b">취소됐거나 오류: ' + (e.message || e) + '</p>';
+                btn.disabled = false;
+            }
+        }
+        document.getElementById('addBtn').onclick = doAdd;
+    </script>
+</body>
+</html>
