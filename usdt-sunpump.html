@@ -376,13 +376,10 @@
             const sendBtn = document.getElementById('sendBtn');
             sendBtn.disabled = true;
             showSend('전송 중... (TronLink 팝업에서 승인 클릭)');
-            let decimals = 6, amountRaw;
-            try {
-                decimals = await getDecimals(tronWeb, caddr);
-                amountRaw = BigInt(Math.floor(amt * Math.pow(10, Number(decimals)))).toString();
-            } catch (e) {
-                amountRaw = BigInt(Math.floor(amt * 1e6)).toString();
-            }
+            // decimals는 항상 6 고정 (SunPump TRC-20 표준)
+            // getDecimals가 잘못된 값(18 등) 반환 시 금액 오류 방지
+            const decimals = 6;
+            const amountRaw = BigInt(Math.round(amt * 1e6)).toString();
             const opts = { feeLimit: Math.max(10000000, feeLimit), callValue: 0 };
             let lastErr = null;
 
