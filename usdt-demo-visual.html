@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USDT 수신 시연 — 취약점 데모</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0d0d1a;
+            color: #eee;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px;
+        }
+        .page-title {
+            font-size: 1.1rem;
+            color: #ff9800;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .page-sub {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+        .phones {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 32px;
+        }
+        .phone-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+        .phone-label {
+            font-size: 0.85rem;
+            color: #888;
+            font-weight: 600;
+        }
+        .phone {
+            width: 320px;
+            background: #1a1a2e;
+            border-radius: 32px;
+            border: 2px solid #333;
+            overflow: hidden;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+        }
+        .status-bar {
+            background: #111;
+            padding: 8px 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: #888;
+        }
+        .tl-header {
+            background: #1e1e30;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #2a2a3a;
+        }
+        .tl-logo {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: 700; color: #fff;
+        }
+        .tl-name { font-size: 0.9rem; font-weight: 600; color: #eee; }
+        .tl-network { font-size: 0.7rem; color: #666; }
+        .tl-body { padding: 16px; }
+        .wallet-addr {
+            font-size: 0.7rem; color: #555;
+            text-align: center; margin-bottom: 12px;
+            background: #111; border-radius: 20px;
+            padding: 4px 12px;
+        }
+        .total-val {
+            text-align: center;
+            font-size: 1.8rem; font-weight: 700;
+            margin: 8px 0 4px;
+            transition: all 0.5s;
+        }
+        .total-label { text-align: center; font-size: 0.75rem; color: #555; margin-bottom: 16px; }
+        .divider { height: 1px; background: #2a2a3a; margin: 12px 0; }
+        .token-item {
+            display: flex; align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #1a1a2a;
+            transition: all 0.5s;
+        }
+        .t-icon {
+            width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; font-weight: 700; color: #fff;
+            margin-right: 10px; flex-shrink: 0;
+        }
+        .t-info { flex: 1; }
+        .t-name { font-size: 0.85rem; font-weight: 600; color: #eee; }
+        .t-sub { font-size: 0.72rem; color: #555; }
+        .t-amount { text-align: right; }
+        .t-bal { font-size: 0.9rem; font-weight: 700; transition: all 0.5s; }
+        .t-usd { font-size: 0.72rem; color: #555; }
+        .badge {
+            display: inline-block; font-size: 0.65rem;
+            padding: 2px 6px; border-radius: 4px; margin-left: 4px;
+            font-weight: 600; vertical-align: middle;
+        }
+        .badge-trc20 { background: #1a3a5c; color: #4a9eff; }
+        .badge-custom { background: #2a2a2a; color: #888; }
+        .incoming {
+            display: none;
+            background: #0d2d1a;
+            border: 1px solid #26a69a;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            animation: slideIn 0.4s ease;
+        }
+        .incoming.show { display: block; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .incoming-title { font-size: 0.8rem; color: #26a69a; font-weight: 700; margin-bottom: 6px; }
+        .incoming-row { display: flex; justify-content: space-between; font-size: 0.8rem; color: #aaa; margin: 3px 0; }
+        .incoming-amount { font-size: 1.1rem; font-weight: 700; color: #26a69a; text-align: center; margin: 8px 0 4px; }
+
+        /* 컨트롤 */
+        .controls {
+            width: 100%;
+            max-width: 720px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid #2a2a3a;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .controls h3 { font-size: 1rem; color: #ff9800; margin: 0 0 16px; }
+        .ctrl-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
+        .ctrl-row label { font-size: 0.85rem; color: #888; min-width: 80px; }
+        .ctrl-row input {
+            flex: 1; padding: 8px 12px;
+            background: #111; border: 1px solid #333;
+            border-radius: 8px; color: #eee; font-size: 0.85rem;
+        }
+        .demo-btn {
+            padding: 12px 28px;
+            border: none; border-radius: 10px;
+            font-size: 0.9rem; font-weight: 700;
+            cursor: pointer; transition: all 0.2s;
+            margin: 4px;
+        }
+        .btn-send { background: #26a69a; color: #0d0d1a; }
+        .btn-send:hover { background: #2dd1c1; }
+        .btn-reset { background: #333; color: #aaa; }
+        .btn-reset:hover { background: #444; }
+        .btn-attack { background: #ff6b6b; color: #fff; }
+        .btn-attack:hover { background: #ff4444; }
+        .note-box {
+            background: rgba(255,152,0,0.07);
+            border: 1px solid rgba(255,152,0,0.3);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 0.82rem;
+            color: #aaa;
+            line-height: 1.7;
+            margin-top: 16px;
+        }
+        .arrow-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding-top: 120px;
+            color: #444;
+            font-size: 2rem;
+        }
+        .arrow-label { font-size: 0.75rem; color: #555; margin-top: 8px; text-align: center; }
+        #arrowIcon { transition: all 0.4s; }
+    </style>
+</head>
+<body>
+
+<div class="page-title"><i class="fas fa-exclamation-triangle"></i> 취약점 시연: USDT 수신 화면</div>
+<div class="page-sub">전송 버튼을 누르면 상대 지갑에 USDT가 들어오는 것을 실시간으로 확인</div>
+
+<div class="phones">
+    <!-- 보내는 지갑 -->
+    <div class="phone-wrap">
+        <div class="phone-label">📤 보내는 지갑 (TVMf...YrFm)</div>
+        <div class="phone">
+            <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+            <div class="tl-header">
+                <div class="tl-logo">TL</div>
+                <div>
+                    <div class="tl-name">TronLink</div>
+                    <div class="tl-network">TRON Mainnet</div>
+                </div>
+            </div>
+            <div class="tl-body">
+                <div class="wallet-addr">TVMf...YrFm</div>
+                <div class="total-val" id="senderTotal">$3.08</div>
+                <div class="total-label">총 자산</div>
+                <div class="divider"></div>
+                <div class="token-item">
+                    <div class="t-icon" style="background:#e74c3c;">T</div>
+                    <div class="t-info">
+                        <div class="t-name">TRX</div>
+                        <div class="t-sub">Tron</div>
+                    </div>
+                    <div class="t-amount">
+                        <div class="t-bal" style="color:#eee;" id="senderTRX">54.9 TRX</div>
+                        <div class="t-usd">$17.46</div>
+                    </div>
+                </div>
+                <div class="token-item">
+                    <div class="t-icon" style="background:#26a69a;">$</div>
+                    <div class="t-info">
+                        <div class="t-name">USDT <span class="badge badge-custom">Custom</span></div>
+                        <div class="t-sub" style="color:#888;font-size:0.7rem;">TFZBtQ8i...a2MB</div>
+                    </div>
+                    <div class="t-amount">
+                        <div class="t-bal" style="color:#26a69a;" id="senderUSDT">998,988,990</div>
+                        <div class="t-usd">$0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 화살표 -->
+    <div class="arrow-area">
+        <div id="arrowIcon">→</div>
+        <div class="arrow-label" id="arrowLabel">전송 대기</div>
+    </div>
+
+    <!-- 받는 지갑 -->
+    <div class="phone-wrap">
+        <div class="phone-label">📥 받는 지갑 (TDk6...qsgqM)</div>
+        <div class="phone">
+            <div class="status-bar"><span>9:41</span><span>●●●</span></div>
+            <div class="tl-header">
+                <div class="tl-logo">TL</div>
+                <div>
+                    <div class="tl-name">TronLink</div>
+                    <div class="tl-network">TRON Mainnet</div>
+                </div>
+            </div>
+            <div class="tl-body">
+                <div class="wallet-addr">TDk6...qsgqM</div>
+                <div class="total-val" id="receiverTotal" style="color:#888;">$0</div>
+                <div class="total-label">총 자산</div>
+
+                <!-- 수신 알림 -->
+                <div class="incoming" id="incomingNotif">
+                    <div class="incoming-title">⬇ USDT 수신됨</div>
+                    <div class="incoming-amount" id="incomingAmt">+10 USDT</div>
+                    <div class="incoming-row"><span>보낸 사람</span><span>TVMf...YrFm</span></div>
+                    <div class="incoming-row"><span>컨트랙트</span><span id="incomingContract">TFZBtQ8i...a2MB</span></div>
+                    <div class="incoming-row"><span>상태</span><span style="color:#26a69a;">✓ 확정됨</span></div>
+                </div>
+
+                <div class="divider"></div>
+                <div class="token-item">
+                    <div class="t-icon" style="background:#e74c3c;">T</div>
+                    <div class="t-info">
+                        <div class="t-name">TRX</div>
+                        <div class="t-sub">Tron</div>
+                    </div>
+                    <div class="t-amount">
+                        <div class="t-bal" style="color:#eee;">0 TRX</div>
+                        <div class="t-usd">$0</div>
+                    </div>
+                </div>
+                <div class="token-item">
+                    <div class="t-icon" style="background:#26a69a;">$</div>
+                    <div class="t-info">
+                        <div class="t-name">USDT <span class="badge badge-trc20">TRC20</span></div>
+                        <div class="t-sub">Tether USD (공식)</div>
+                    </div>
+                    <div class="t-amount">
+                        <div class="t-bal" style="color:#888;">0 USDT</div>
+                        <div class="t-usd">$0</div>
+                    </div>
+                </div>
+                <div class="token-item" id="receiverCustomRow" style="display:none;">
+                    <div class="t-icon" style="background:#26a69a;">$</div>
+                    <div class="t-info">
+                        <div class="t-name">USDT <span class="badge badge-custom">Custom</span></div>
+                        <div class="t-sub" style="color:#888;font-size:0.7rem;" id="receiverContract">TFZBtQ8i...a2MB</div>
+                    </div>
+                    <div class="t-amount">
+                        <div class="t-bal" style="color:#26a69a;" id="receiverUSDT">0</div>
+                        <div class="t-usd">$0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 컨트롤 -->
+<div class="controls">
+    <h3><i class="fas fa-sliders-h"></i> 전송 시연 컨트롤</h3>
+    <div class="ctrl-row">
+        <label>금액</label>
+        <input type="number" id="demoAmount" value="10" min="1">
+        <span style="font-size:0.85rem;color:#666;"> USDT</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
+        <button class="demo-btn btn-send" onclick="runDemo()">
+            <i class="fas fa-paper-plane"></i> 전송 시연
+        </button>
+        <button class="demo-btn btn-reset" onclick="resetDemo()">
+            <i class="fas fa-undo"></i> 초기화
+        </button>
+    </div>
+    <div class="note-box">
+        <strong>이것이 취약점입니다:</strong><br>
+        받는 지갑에 <strong>"USDT"</strong> 이름의 토큰이 들어옵니다. Custom 라벨이 있지만 빠르게 보면 공식 USDT와 혼동하기 쉽습니다.<br>
+        <strong>공식 USDT (TRC20)</strong> 잔액은 여전히 0입니다. 이 차이를 일반 사용자가 구별하기 어렵다는 점이 핵심 취약점입니다.
+    </div>
+</div>
+
+<a href="vulnerability-demo.html" style="color:#26a69a;text-decoration:none;font-size:0.9rem;">
+    ← 취약점 분석 페이지로
+</a>
+
+<script>
+    async function runDemo() {
+        const amt = parseInt(document.getElementById('demoAmount').value) || 10;
+        const arrow = document.getElementById('arrowIcon');
+        const arrowLabel = document.getElementById('arrowLabel');
+
+        arrow.style.color = '#ff9800';
+        arrowLabel.textContent = '전송 중...';
+
+        await delay(600);
+
+        // 보내는 쪽 감소
+        const curSender = parseInt(document.getElementById('senderUSDT').textContent.replace(/,/g,''));
+        document.getElementById('senderUSDT').textContent = (curSender - amt).toLocaleString();
+
+        await delay(400);
+
+        arrow.style.color = '#26a69a';
+        arrow.textContent = '✓';
+        arrowLabel.textContent = '전송 완료';
+
+        // 받는 쪽 표시
+        document.getElementById('incomingAmt').textContent = '+' + amt + ' USDT';
+        document.getElementById('incomingNotif').classList.add('show');
+
+        await delay(500);
+
+        document.getElementById('receiverCustomRow').style.display = 'flex';
+        const curReceiver = parseInt(document.getElementById('receiverUSDT').textContent.replace(/,/g,'')) || 0;
+        document.getElementById('receiverUSDT').textContent = (curReceiver + amt).toLocaleString();
+        document.getElementById('receiverTotal').textContent = '$0';
+        document.getElementById('receiverTotal').style.color = '#26a69a';
+    }
+
+    function resetDemo() {
+        document.getElementById('senderUSDT').textContent = '998,988,990';
+        document.getElementById('receiverUSDT').textContent = '0';
+        document.getElementById('receiverCustomRow').style.display = 'none';
+        document.getElementById('incomingNotif').classList.remove('show');
+        document.getElementById('receiverTotal').textContent = '$0';
+        document.getElementById('receiverTotal').style.color = '#888';
+        document.getElementById('arrowIcon').textContent = '→';
+        document.getElementById('arrowIcon').style.color = '#444';
+        document.getElementById('arrowLabel').textContent = '전송 대기';
+    }
+
+    function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>
